@@ -5,8 +5,8 @@
   "main": "server.js",
   "type": "module",
   "scripts": {
-    "dev": "netlify dev",
-    "start": "node server.js"
+    "start": "netlify dev",
+    "build": "npm ci"
   },
   "keywords": [],
   "author": "",
