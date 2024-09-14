@@ -6,5 +6,10 @@
 [functions]
   directory = "functions"
 
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api"
+  status = 200
+
 [dev]
   command = "netlify dev"
