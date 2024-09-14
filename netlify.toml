@@ -5,6 +5,7 @@
 
 [functions]
   directory = "functions"
+  timeout = 120 # Timeout in seconds
 
 [[redirects]]
   from = "/api/*"

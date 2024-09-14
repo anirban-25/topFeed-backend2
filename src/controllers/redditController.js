@@ -75,6 +75,7 @@ export async function processRedditData(req, res) {
             analysisData,
           });
       }, 30000);
+      
     } else {
       res.status(500).json({ error: "Failed to invoke Lambda function" });
     }
