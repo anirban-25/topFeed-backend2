@@ -1,5 +1,6 @@
-import serverless from "serverless-http";
 import express from "express";
+import timeout from "connect-timeout";
+import serverless from "serverless-http";
 import dotenv from "dotenv";
 import cors from "cors";
 import redditRoutes from "../src/routes/redditRoutes.js";
@@ -9,13 +10,15 @@ dotenv.config();
 
 const app = express();
 
-app.use(cors());
-app.use(express.json());
-
-app.use(timeout("120s")); // Timeout in seconds
+// Middleware to set timeout
+app.use(timeout('120s')); // Timeout in seconds
 app.use((req, res, next) => {
   if (!req.timedout) next();
 });
+
+app.use(cors());
+app.use(express.json());
+
 app.get("/api/test", (req, res) => {
   res.json({ message: "API is working" });
 });
