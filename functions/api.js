@@ -2,7 +2,7 @@ import serverless from 'serverless-http';
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
-import redditRoutes from './src/routes/redditRoutes.js';
+import redditRoutes from '../src/routes/redditRoutes.js';
 
 dotenv.config();
 
