@@ -1,0 +1,15 @@
+[build]
+  command = "npm install"  # Install dependencies
+  functions = "functions"  # Directory where your serverless functions will be
+  publish = "public"       # Directory with static files to be served (create if doesn't exist)
+
+[functions]
+  directory = "functions"  # Same as above, specifies where your functions are
+
+[[redirects]]
+  from = "/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+[dev]
+  command = "npm run dev"  # Command to start your development server (adjust if needed)
