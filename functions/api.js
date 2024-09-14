@@ -3,6 +3,7 @@ import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import redditRoutes from "../src/routes/redditRoutes.js";
+import { processRedditData } from "../src/controllers/redditController.js";
 
 dotenv.config();
 
@@ -15,11 +16,7 @@ app.get("/api/test", (req, res) => {
   res.json({ message: "API is working" });
 });
 
-// if (typeof redditRoutes === 'function') {
-app.use("/api/reddit", redditRoutes);
-// } else {
-//   console.error('redditRoutes is not a function:', redditRoutes);
-// }
+app.post("/api/reddit", processRedditData);
 
 app.use((err, req, res, next) => {
   console.error(err);
