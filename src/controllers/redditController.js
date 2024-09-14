@@ -5,6 +5,10 @@ import { lambdaClient } from '../config/awsConfig.js';
 
 export async function processRedditData(req, res) {
   try {
+    setTimeout(() => {
+      console.log("This message is displayed after 3 seconds");
+    }, 30000);
+    
     const { subreddits, userId } = req.body;
 
     console.log("Subreddits:", subreddits);
