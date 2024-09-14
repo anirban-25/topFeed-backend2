@@ -65,17 +65,13 @@ export async function processRedditData(req, res) {
         console.log("Telegram message sent successfully.");
       }
 
-      setTimeout(() => {
-        console.log("This message is displayed after 3 seconds");
-        res
-          .status(200)
-          .json({
-            message:
-              "Data processed, stored, and notification sent if applicable",
-            analysisData,
-          });
-      }, 30000);
-w      
+      // setTimeout(() => {
+      //   console.log("This message is displayed after 3 seconds");
+      // }, 30000);
+        res.status(200).json({
+          message: "Data processed, stored, and notification sent if applicable",
+          analysisData,
+        });
     } else {
       res.status(500).json({ error: "Failed to invoke Lambda function" });
     }
