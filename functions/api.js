@@ -9,7 +9,12 @@ const app = express();
 
 app.use(express.json());
 
-// Remove the '/api/reddit' prefix here
-app.use('/', redditRoutes);
+// Check if redditRoutes is a function (router)
+if (typeof redditRoutes === 'function') {
+  app.use('/api/reddit', redditRoutes);
+} else {
+  console.error('redditRoutes is not a function:', redditRoutes);
+  // You might want to add some default routing here
+}
 
 export const handler = serverless(app);
