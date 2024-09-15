@@ -3,8 +3,8 @@ const { parse } = require("node-html-parser");
 const admin = require("firebase-admin");
 const { OpenAI } = require("openai");
 const { parseISO, subHours } = require("date-fns");
-const { getUserNotificationSettings, sendTelegramMessage } = require("./notificationUtils");
-const { storeDataInFirestore } = require("./storeTwitterData");
+const { getUserNotificationSettings, sendTelegramMessage } = require("../utils/notificationUtils");
+const { storeDataInFirestore } = require("../utils/storeTwitterData");
 
 // Initialize Firebase Admin SDK
 if (!admin.apps.length) {
