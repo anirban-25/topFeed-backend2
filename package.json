@@ -1,28 +1,19 @@
 {
-  "name": "topfeed-backend",
+  "name": "netlify-twitter-feed-processor",
   "version": "1.0.0",
-  "description": "",
-  "main": "server.js",
-  "type": "module",
+  "description": "Twitter feed processor for Netlify",
+  "main": "functions/processTweets.js",
   "scripts": {
-    "start": "netlify dev",
-    "build": "npm ci"
+    "build": "netlify-lambda build functions"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
-    "@aws-sdk/client-lambda": "^3.650.0",
-    "aws-cli": "^0.0.2",
-    "connect-timeout": "^1.9.0",
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
-    "express": "^4.21.0",
-    "firebase": "^9.x.x",
-    "serverless-http": "^3.2.0"
+    "axios": "^0.21.1",
+    "date-fns": "^2.22.1",
+    "firebase-admin": "^9.9.0",
+    "node-html-parser": "^3.3.6",
+    "openai": "^4.0.0"
   },
   "devDependencies": {
-    "netlify-cli": "^17.36.0",
-    "nodemon": "^2.0.22"
+    "netlify-lambda": "^2.0.16"
   }
 }

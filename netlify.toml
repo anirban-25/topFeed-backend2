@@ -1,15 +1,9 @@
-[build]
-  command = "npm ci"
+[
+build
+]
   functions = "functions"
-  publish = "public"
 
-[functions]
-  directory = "functions"
-
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/api"
-  status = 200
-
-[dev]
-  command = "netlify dev"
+[
+functions
+]
+  node_bundler = "esbuild"
