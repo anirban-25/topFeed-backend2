@@ -10,6 +10,7 @@ app.use(bodyParser.json());
 
 // const PORT = process.env.PORT || 5000;
 // Increase the timeout for all routes
+
 app.use((req, res, next) => {
   res.setTimeout(540000, () => {
     console.log('Request has timed out.');
@@ -19,6 +20,7 @@ app.use((req, res, next) => {
 });
 
 // Simple health check route
+
 app.get('/', (req, res) => {
   res.status(200).send('OK');
 });
