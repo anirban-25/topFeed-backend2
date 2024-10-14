@@ -1,33 +1,6 @@
 import { db } from '../firebase.js';
 import { collection, doc, setDoc } from 'firebase/firestore';
 
-/**
- * @typedef {Object} SubHeading
- * @property {string} title
- * @property {string[]} points
- */
-
-/**
- * @typedef {Object} Heading
- * @property {string} heading
- * @property {SubHeading[]} sub_headings
- */
-
-/**
- * @typedef {Object} TrendsAndQuestions
- * @property {string} title
- * @property {string[]} points
- */
-
-/** @typedef {(Heading | TrendsAndQuestions)[]} APIResponseType */
-
-/**
- * Stores Reddit analysis data in Firestore
- * @param {APIResponseType} data - The analysis data to store
- * @param {string} user - The user ID
- * @param {string[]} subreddits - The list of subreddits analyzed
- * @returns {Promise<import('firebase/firestore').DocumentReference>}
- */
 export async function storeDataInFirestore(data, user, subreddits) {
   if (!user) {
     console.error("No user ID provided.");

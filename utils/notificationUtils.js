@@ -22,6 +22,7 @@ export async function sendTelegramMessage(telegramAccount, message) {
   try {
     const telegramToken = process.env.TELEGRAM_BOT_TOKEN;
     const url = `https://api.telegram.org/bot${telegramToken}/sendMessage`;
+    console.log("telegram account " + telegramAccount + "token" + telegramToken);
     const response = await axios.post(url, {
       chat_id: telegramAccount,
       text: message,

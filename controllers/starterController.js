@@ -5,7 +5,7 @@ import {
   sendTelegramMessage,
 } from "../utils/notificationUtils.js";
 
-export async function processCron(req, res) {
+export async function processStarter(req, res) {
   try {
     console.log("Starting processCron");
     const forceRefresh = req.query.refresh === "true";
@@ -39,7 +39,7 @@ export async function processCron(req, res) {
         if(plandoc.exists){
           plan = plandoc.data().plan;
         }
-        if (plan == "free" || !plan || plan == "") {
+        if (plan == "starter") {
           try {
             // Fetch user's tweet feed configuration
             const tweetFeedSnapshot = await db
