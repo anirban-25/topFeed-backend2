@@ -39,7 +39,7 @@ export async function processGrowth(req, res) {
         if(plandoc.exists){
           plan = plandoc.data().plan;
         }
-        if (plan == "growth") {
+        if (plan == "Growth") {
           try {
             // Fetch user's tweet feed configuration
             const tweetFeedSnapshot = await db

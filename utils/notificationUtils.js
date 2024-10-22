@@ -4,11 +4,17 @@ import axios from 'axios';
 // Fetch user notification settings from Firestore
 export async function getUserNotificationSettings(userId) {
   try {
+    console.log("Fetching document for userId:", userId);
     const docRef = admin.firestore().doc(`notifications/${userId}`);
+    console.log("Document reference created");
     const docSnap = await docRef.get();
+    console.log("Document snapshot retrieved");
+    
     if (docSnap.exists) {
+      console.log("Document exists, data:", docSnap.data());
       return docSnap.data();
     } else {
+      console.log("Document does not exist for userId:", userId);
       return null;
     }
   } catch (error) {
@@ -16,7 +22,6 @@ export async function getUserNotificationSettings(userId) {
     return null;
   }
 }
-
 // Send a Telegram message via Telegram API
 export async function sendTelegramMessage(telegramAccount, message) {
   try {

@@ -39,7 +39,7 @@ export async function processScale(req, res) {
         if(plandoc.exists){
           plan = plandoc.data().plan;
         }
-        if (plan == "scale") {
+        if (plan == "Scale") {
           try {
             // Fetch user's tweet feed configuration
             const tweetFeedSnapshot = await db
@@ -114,7 +114,7 @@ export async function processScale(req, res) {
               ) {
                 await sendTelegramMessage(
                   telegramUserId,
-                  `${tweet.relevancy} tweet: ${tweet.url}`
+                  `${tweet.relevancy} relevancy tweet: ${tweet.url}`
                 );
               }
             }

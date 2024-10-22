@@ -39,7 +39,7 @@ export async function processStarter(req, res) {
         if(plandoc.exists){
           plan = plandoc.data().plan;
         }
-        if (plan == "starter") {
+        if (plan == "Starter") {
           try {
             // Fetch user's tweet feed configuration
             const tweetFeedSnapshot = await db

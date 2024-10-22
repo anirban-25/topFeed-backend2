@@ -3,6 +3,7 @@ import cors from "cors";
 import bodyParser from "body-parser";
 import feedRoutes from "./routes/feedRoute.js";
 import redditRoutes from "./routes/redditRoutes.js";
+import monthlyScheduler from "./routes/monthlyScheduler.js";
 // import { initializeFirebase } from './config/firebase.js';
 import cronRoute from "./routes/cronRoute.js";
 
@@ -34,6 +35,8 @@ app.use("/api", cronRoute);
 app.use("/api/feed", feedRoutes);
 
 app.use("/api/reddit", redditRoutes);
+
+app.use("/cron", monthlyScheduler);
 
 export const feedAPI = (req, res) => {
   return app(req, res);
