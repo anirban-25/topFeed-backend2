@@ -1,5 +1,5 @@
 import { db } from '../firebase.js';
-import { collection, doc, setDoc, getDoc } from 'firebase/firestore';
+import { collection, doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 export async function storeDataInFirestore(data, user, subreddits) {
   if (!user) {
     console.error("No user ID provided.");
@@ -11,6 +11,15 @@ export async function storeDataInFirestore(data, user, subreddits) {
   try {
     // console.log(`Storing data for user ${user}`);
     // Get the current document to check the current value of isRefresh
+
+    
+    const userDoc = await getDoc(userDocRef);
+    if (userDoc.exists()) {
+      // Update the "redditLoading" field to true
+      await updateDoc(doc(db, "users", user), {
+        redditLoading: false,
+      });
+    }
     const latestDocSnapshot = await getDoc(latestDocRef);
     let isRefresh = 1; // Initialize to 1 if the field doesn't exist
     if (latestDocSnapshot.exists() && latestDocSnapshot.data().isRefresh) {
@@ -22,6 +31,7 @@ export async function storeDataInFirestore(data, user, subreddits) {
       timestamp: new Date(),
       isRefresh: isRefresh, // Add or update isRefresh field
     }, { merge: true });
+   
     console.log("Document updated with ID: ", latestDocRef.id);
     return latestDocRef;
   } catch (e) {

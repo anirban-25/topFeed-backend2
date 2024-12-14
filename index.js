@@ -29,7 +29,6 @@ app.get("/", (req, res) => {
 });
 
 // Routes
-
 app.use("/api", cronRoute);
 
 app.use("/api/feed", feedRoutes);

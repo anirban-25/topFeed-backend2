@@ -31,16 +31,15 @@ export async function processCron(req, res) {
     const allResults = await Promise.all(
       usersSnapshot.docs.map(async (userDoc) => {
         const userId = userDoc.id;
-        console.log(`Processing user: ${userId}`);
         const planFetch = db.collection("users").doc(userId);
-        // const plan = planFetch.data().plan;
-        let plan = ""
+        let plan = "";
         const plandoc = await planFetch.get();
-        if(plandoc.exists){
+        if (plandoc.exists) {
           plan = plandoc.data().plan;
         }
         if (plan == "free" || !plan || plan == "") {
           try {
+            console.log(`Processing free plan for ${userId}`);
             // Fetch user's tweet feed configuration
             const tweetFeedSnapshot = await db
               .collection("users")
@@ -48,7 +47,7 @@ export async function processCron(req, res) {
               .collection("tweet_feed")
               .limit(1)
               .get();
-            console.log(`Processing tweet feed: ${tweetFeedSnapshot}`);
+
             if (tweetFeedSnapshot.empty) {
               console.log(`No tweet_feed found for user ${userId}`);
               return null;
@@ -58,80 +57,171 @@ export async function processCron(req, res) {
             const tweetFeedData = tweetFeedDoc.data();
             console.log(`User ${userId} - Tweet feed data:`, tweetFeedData);
 
+            // Extract usernames and add @ prefix
+            const filterMeArray = tweetFeedData.twitterUrls.map((url) => {
+              const username = url.split("/").pop();
+              return `@${username}`;
+            });
+
+            // Get all user tweets
+            const userTweetsRef = db
+              .collection("users")
+              .doc(userId)
+              .collection("user_tweets");
+            const tweetsSnapshot = await userTweetsRef.get();
+
+            // First batch operation for deletions
+            const deleteBatch = db.batch();
+            let deleteCount = 0;
+
+            // Current date for comparison
+            const currentDate = new Date();
+
+            tweetsSnapshot.forEach((doc) => {
+              const tweet = doc.data();
+              if (!tweet.created_at) {
+                deleteBatch.delete(doc.ref);
+                deleteCount++;
+                return;
+              }
+              const tweetDate = tweet.created_at.toDate();
+              const daysDifference =
+                (currentDate - tweetDate) / (1000 * 60 * 60 * 24);
+
+              // Check if tweet is older than 3 days
+              if (daysDifference > 3) {
+                deleteBatch.delete(doc.ref);
+                deleteCount++;
+                return;
+              }
+
+              // Check if any authors match filterMeArray
+              const authorMatches = tweet.authors.some((author) =>
+                filterMeArray.includes(author.name)
+              );
+
+              if (!authorMatches) {
+                console.log("Author not matching");
+                deleteBatch.delete(doc.ref);
+                deleteCount++;
+              }
+            });
+
+            // Commit deletions if any
+            if (deleteCount > 0) {
+              try {
+                await deleteBatch.commit();
+                console.log(`Deleted ${deleteCount} tweets for user ${userId}`);
+              } catch (error) {
+                console.error(
+                  `Error committing delete batch for user ${userId}:`,
+                  error
+                );
+              }
+            }
+
             // Fetch user's notification settings
             const userSettings = await getUserNotificationSettings(userId);
             const notificationLevels = userSettings?.notificationLevels || [];
             const telegramUserId = userSettings?.telegramUserId || "";
 
-            if (!userSettings) {
-              console.log(
-                `No notification settings found for user ${userId}. Continuing without notifications.`
-              );
-            } else {
-              console.log(
-                `notification settings found for user ${userId}. Continuing with notifications.`
-              );
+            if (!tweetFeedData.twitterUrls || !tweetFeedData.tags) {
+              console.log(`Missing twitterUrls or tags for user ${userId}`);
+              return null;
             }
 
-            if (!tweetFeedData.twitterUrls || !tweetFeedData.topic) {
-              console.log(`Missing twitterUrls or topic for user ${userId}`);
-              // return null;
-            }
+            const topicsString = tweetFeedData.tags.join(', ');
 
             // Fetch and process feeds
             const result = await fetchFeeds(
               tweetFeedData.twitterUrls,
-              tweetFeedData.topic,
+              topicsString,
               userId,
               notificationLevels,
               telegramUserId
             );
             console.log(`User ${userId} - fetchFeeds result:`, result);
 
-            // Update user_tweets subcollection
-            const userTweetsRef = db
-              .collection("users")
-              .doc(userId)
-              .collection("user_tweets");
-            const batch = db.batch();
+            // Second batch operation for adding new tweets
+            const addBatch = db.batch();
+            let addCount = 0;
 
             for (const tweet of result) {
+              // Check if we're approaching batch limit (500 operations)
+              if (addCount >= 450) {
+                try {
+                  await addBatch.commit();
+                  console.log(
+                    `Committed batch of ${addCount} new tweets for user ${userId}`
+                  );
+                  addCount = 0;
+                  // Create a new batch for remaining operations
+                  addBatch = db.batch();
+                } catch (error) {
+                  console.error(
+                    `Error committing add batch for user ${userId}:`,
+                    error
+                  );
+                }
+              }
+
               const newTweetRef = userTweetsRef.doc();
-              batch.set(newTweetRef, {
+              addBatch.set(newTweetRef, {
                 content_html: tweet.content_html,
                 authors: tweet.authors,
                 relevancy: tweet.relevancy,
                 url: tweet.url,
                 created_at: admin.firestore.FieldValue.serverTimestamp(),
               });
+              addCount++;
 
-              console.log(telegramUserId);
-              // Send notification if the tweet meets the user's notification criteria and settings exist
               if (
                 userSettings &&
                 notificationLevels.includes(tweet.relevancy.toLowerCase()) &&
                 telegramUserId
               ) {
-                await sendTelegramMessage(
-                  telegramUserId,
-                  `${tweet.relevancy} tweet: ${tweet.url}`
-                );
+                try {
+                  await sendTelegramMessage(
+                    telegramUserId,
+                    `${tweet.relevancy} tweet: ${tweet.url}`
+                  );
+                } catch (error) {
+                  console.error(
+                    `Error sending Telegram message for user ${userId}:`,
+                    error
+                  );
+                }
               }
             }
 
-            await batch.commit();
-            console.log(`Updated user_tweets for user ${userId}`);
+            // Commit any remaining tweets in the final batch
+            if (addCount > 0) {
+              try {
+                await addBatch.commit();
+                console.log(
+                  `Committed final batch of ${addCount} new tweets for user ${userId}`
+                );
+              } catch (error) {
+                console.error(
+                  `Error committing final add batch for user ${userId}:`,
+                  error
+                );
+              }
+            }
 
             return {
               userId: userId,
               tweetFeedId: tweetFeedDoc.id,
               processedTweets: result.length,
+              deletedTweets: deleteCount,
+              addedTweets: addCount,
             };
           } catch (error) {
             console.error(`Error processing user ${userId}:`, error);
             return null;
           }
         }
+        return null; // Return null for non-free plans
       })
     );
 
