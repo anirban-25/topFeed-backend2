@@ -39,7 +39,7 @@ export async function processScale(req, res) {
           plan = plandoc.data().plan;
         }
         
-        if (plan === "Scale") {
+        if (plan === "Scale" || plan === "Test") {
           try {
             // Fetch user's tweet feed configuration
             const tweetFeedSnapshot = await db

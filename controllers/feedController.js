@@ -88,14 +88,37 @@ async function feedToGPT(
     const title = String(row.text).trim();
     const contentText = String(row.meta_titles);
     const summaryInput = `text: ${title}\nMeta Title of Data mentioned via url: ${contentText}`;
-
     try {
       const response = await client.chat.completions.create({
         model: MODEL,
         messages: [
           {
             role: "system",
-            content: `You are an AI assistant helping to categorize tweets based on their relevancy to -> ${newTopic}. PS: the words provided before should be strictly measured, Match in words should not be taken as relevancy, rather give preferrence to the algorithms and details,. You will provide one word answer, either High, Medium, Low. The description will include topics and areas of interest. Each tweet should be categorized into one of three relevancy levels: high, medium, or low. Use the following criteria to determine the relevancy:\nHigh Relevancy: The tweet directly discusses the key elements of the specified description in detail, providing valuable insights, updates, strategies, or news specifically about those elements. The content is focused and highly relevant to the description, addressing specific aspects or details mentioned in the description.\nMedium Relevancy: The tweet mentions elements of the specified description but does not focus exclusively on them. It may include some useful information, tips, or brief mentions related to the description. While it might cover related topics, it does not delve deeply into the specifics outlined in the description.\nLow Relevancy: The tweet mentions related but distinct topics or focuses on other areas. It does not provide substantial information or insights about the specific elements mentioned in the description. The relevance to the specified description is minimal or tangential.`,
+            content: `You are an AI assistant helping to categorize tweets based on their relevancy to -> ${newTopic}. 
+
+STEP 1: Topic Type Classification
+First, determine if the topic contains any of these types:
+- Personality topics: Names of specific people 
+- General topics: Abstract concepts, events, or subjects 
+
+STEP 2: Apply Relevancy Rules Based on Topic Type
+
+For Personality Topics:
+- HIGH Relevancy: Any direct mention of the person's name, UNLESS it's clearly used in an unrelated context (e.g., "trump card")
+- LOW Relevancy: Only if the name appears in a completely unrelated context OR doesn't appear at all
+
+For General Topics:
+1. HIGH Relevancy: The tweet directly discusses or provides substantial focus on the topic
+2. MEDIUM Relevancy: The tweet mentions or partially aligns with the topic but without detailed focus
+3. LOW Relevancy: The tweet has no meaningful connection to the topic
+
+For Mixed Topics (containing both personality and general elements):
+- Apply personality rules first
+- If no personality match is found, apply general topic rules
+
+You will provide a one-word answer: High, Medium, or Low.
+
+Remember: For personality-based topics like "Trump" or "Biden", ANY direct reference to the person should be marked as HIGH unless it's clearly using the name in an unrelated context.`,
           },
           { role: "user", content: title },
         ],
@@ -103,8 +126,9 @@ async function feedToGPT(
         temperature: 0,
       });
       row.relevancy = response.choices[0].message.content ?? "low";
-      console.log("hiiiiiiiii");
-      console.log(row.relevancy+ "   "+ notificationLevels);
+      console.log("hiiiiiiiii\n");
+      console.log(title);
+      console.log(row.relevancy + "   " + notificationLevels);
 
       try {
         if (shouldSendNotification(row.relevancy, notificationLevels)) {
@@ -125,7 +149,6 @@ async function feedToGPT(
 }
 
 async function fetchRssFeeds(
-
   urls,
   newTopic,
   notificationLevels,
@@ -281,15 +304,18 @@ export default async function feedController(req, res) {
     let notificationLevels = [];
     let telegramUserId = "";
     try {
-      const userSettings =await getUserNotificationSettings(userId);
+      const userSettings = await getUserNotificationSettings(userId);
       if (userSettings) {
-        console.log("Settings notifications: " + userSettings.notificationLevels);
+        console.log(
+          "Settings notifications: " + userSettings.notificationLevels
+        );
         notificationLevels = userSettings.notificationLevels || [];
         telegramUserId = userSettings.telegramUserId || "";
       }
     } catch (error) {
       console.error("Error fetching user settings:", error);
     }
+    ``;
 
     const dfFinal = await fetchFeeds(
       twitterUrls,
@@ -303,9 +329,9 @@ export default async function feedController(req, res) {
       content_html: item.content_html || "",
       relevancy: item.relevancy || "low",
       authors: item.authors || [],
-      created_at: new Date()
+      created_at: new Date(),
     }));
-    
+
     await storeDataInFirestore(transformedData, userId);
     res.json({ result: dfFinal });
   } catch (error) {
