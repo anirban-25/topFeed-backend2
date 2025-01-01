@@ -123,22 +123,29 @@ export async function processCron(req, res) {
             // Fetch user's notification settings
             const userSettings = await getUserNotificationSettings(userId);
             const notificationLevels = userSettings?.notificationLevels || [];
-            const telegramUserId = userSettings?.telegramUserId || "";
+            let telegramUserIds = [];
+            if (userSettings.telegramUserId) {
+              telegramUserIds.push(userSettings.telegramUserId);
+            }
 
+            // Add group IDs if they exist
+            if (userSettings.groups && Array.isArray(userSettings.groups)) {
+              const groupIds = userSettings.groups.map((group) => group.id);
+              telegramUserIds = [...telegramUserIds, ...groupIds];
+            }
+            
             if (!tweetFeedData.twitterUrls || !tweetFeedData.tags) {
               console.log(`Missing twitterUrls or tags for user ${userId}`);
               return null;
             }
 
-            const topicsString = tweetFeedData.tags.join(', ');
+            const topicsString = tweetFeedData.tags.join(", ");
 
             // Fetch and process feeds
             const result = await fetchFeeds(
               tweetFeedData.twitterUrls,
               topicsString,
-              userId,
-              notificationLevels,
-              telegramUserId
+              userId
             );
             console.log(`User ${userId} - fetchFeeds result:`, result);
 
@@ -178,13 +185,15 @@ export async function processCron(req, res) {
               if (
                 userSettings &&
                 notificationLevels.includes(tweet.relevancy.toLowerCase()) &&
-                telegramUserId
+                telegramUserIds
               ) {
                 try {
-                  await sendTelegramMessage(
-                    telegramUserId,
-                    `${tweet.relevancy} tweet: ${tweet.url}`
-                  );
+                  if (telegramUserIds.length > 0) {
+                    const sendPromises = telegramUserIds.map((userId) =>
+                      sendTelegramMessage(userId, message)
+                    );
+                    await Promise.all(sendPromises);
+                  }
                 } catch (error) {
                   console.error(
                     `Error sending Telegram message for user ${userId}:`,

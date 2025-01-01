@@ -82,12 +82,16 @@ async function feedToGPT(
   filtered,
   newTopic,
   notificationLevels,
-  telegramUserId
+  telegramUserIds
 ) {
   for (const row of filtered) {
-    const title = String(row.text).trim();
+    console.log(row.title);
+    const str = String(row.title);
+    const firstColonIndex = str.indexOf(":");
+    const extractedText = str.substring(firstColonIndex + 2); // +2 to skip the ': ' part
+    console.log(extractedText);
+    // const title = String(row.text).trim();
     const contentText = String(row.meta_titles);
-    const summaryInput = `text: ${title}\nMeta Title of Data mentioned via url: ${contentText}`;
     try {
       const response = await client.chat.completions.create({
         model: MODEL,
@@ -120,26 +124,33 @@ You will provide a one-word answer: High, Medium, or Low.
 
 Remember: For personality-based topics like "Trump" or "Biden", ANY direct reference to the person should be marked as HIGH unless it's clearly using the name in an unrelated context.`,
           },
-          { role: "user", content: title },
+          { role: "user", content: extractedText },
         ],
         max_tokens: 3000,
         temperature: 0,
       });
       row.relevancy = response.choices[0].message.content ?? "low";
       console.log("hiiiiiiiii\n");
-      console.log(title);
+      console.log(extractedText);
       console.log(row.relevancy + "   " + notificationLevels);
 
       try {
         if (shouldSendNotification(row.relevancy, notificationLevels)) {
           console.log("should send notification");
           const message = `${row.relevancy} relevancy tweet: ${row.url}`;
-          await sendTelegramMessage(telegramUserId, message);
+
+          // Send to all recipients if there are any
+          if (telegramUserIds.length > 0) {
+            const sendPromises = telegramUserIds.map((userId) =>
+              sendTelegramMessage(userId, message)
+            );
+            await Promise.all(sendPromises);
+          }
         } else {
           console.log("should not send notification");
         }
       } catch (error) {
-        console.log(error);
+        console.log("Error sending notifications:", error);
       }
     } catch (error) {
       console.error(`Error in GPT-4 processing: ${error}`);
@@ -152,7 +163,7 @@ async function fetchRssFeeds(
   urls,
   newTopic,
   notificationLevels,
-  telegramUserId,
+  telegramUserIds,
   userId
 ) {
   const twitterData = [];
@@ -228,14 +239,14 @@ async function fetchRssFeeds(
       title,
     })
   );
-  return feedToGPT(filtered, newTopic, notificationLevels, telegramUserId);
+  return feedToGPT(filtered, newTopic, notificationLevels, telegramUserIds);
 }
 
 async function fetchFeeds(
   twitterUrls,
   newTopic,
   notificationLevels,
-  telegramUserId,
+  telegramUserIds,
   userId
 ) {
   const urls = [];
@@ -285,7 +296,7 @@ async function fetchFeeds(
     urls,
     newTopic,
     notificationLevels,
-    telegramUserId,
+    telegramUserIds,
     userId
   );
 }
@@ -302,26 +313,32 @@ export default async function feedController(req, res) {
     }
 
     let notificationLevels = [];
-    let telegramUserId = "";
+    let telegramUserIds = [];
     try {
       const userSettings = await getUserNotificationSettings(userId);
       if (userSettings) {
-        console.log(
-          "Settings notifications: " + userSettings.notificationLevels
-        );
+        console.log("Settings notifications:", userSettings.notificationLevels);
         notificationLevels = userSettings.notificationLevels || [];
-        telegramUserId = userSettings.telegramUserId || "";
+
+        // Initialize array with individual telegramUserId if it exists
+        if (userSettings.telegramUserId) {
+          telegramUserIds.push(userSettings.telegramUserId);
+        }
+
+        // Add group IDs if they exist
+        if (userSettings.groups && Array.isArray(userSettings.groups)) {
+          const groupIds = userSettings.groups.map((group) => group.id);
+          telegramUserIds = [...telegramUserIds, ...groupIds];
+        }
       }
     } catch (error) {
       console.error("Error fetching user settings:", error);
     }
-    ``;
-
     const dfFinal = await fetchFeeds(
       twitterUrls,
       newTopic,
       notificationLevels,
-      telegramUserId,
+      telegramUserIds,
       userId
     );
 

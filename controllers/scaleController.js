@@ -118,7 +118,14 @@ export async function processScale(req, res) {
             // Fetch user's notification settings
             const userSettings = await getUserNotificationSettings(userId);
             const notificationLevels = userSettings?.notificationLevels || [];
-            const telegramUserId = userSettings?.telegramUserId || "";
+            let telegramUserIds = [];
+            if (userSettings.telegramUserId) {
+              telegramUserIds.push(userSettings.telegramUserId);
+            }
+            if (userSettings.groups && Array.isArray(userSettings.groups)) {
+              const groupIds = userSettings.groups.map((group) => group.id);
+              telegramUserIds = [...telegramUserIds, ...groupIds];
+            }
 
             if (!userSettings) {
               console.log(`No notification settings found for user ${userId}. Continuing without notifications.`);
@@ -138,8 +145,6 @@ export async function processScale(req, res) {
               tweetFeedData.twitterUrls,
               topicsString,
               userId,
-              notificationLevels,
-              telegramUserId
             );
             console.log(`User ${userId} - fetchFeeds result:`, result);
 
@@ -174,15 +179,14 @@ export async function processScale(req, res) {
               if (
                 userSettings &&
                 notificationLevels.includes(tweet.relevancy.toLowerCase()) &&
-                telegramUserId
+                telegramUserIds
               ) {
-                try {
-                  await sendTelegramMessage(
-                    telegramUserId,
-                    `${tweet.relevancy} relevancy tweet: ${tweet.url}`
+                
+                if (telegramUserIds.length > 0) {
+                  const sendPromises = telegramUserIds.map((userId) =>
+                    sendTelegramMessage(userId, message)
                   );
-                } catch (error) {
-                  console.error(`Error sending Telegram message for user ${userId}:`, error);
+                  await Promise.all(sendPromises);
                 }
               }
             }
