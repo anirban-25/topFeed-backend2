@@ -321,7 +321,7 @@ export default async function feedController(req, res) {
         notificationLevels = userSettings.notificationLevels || [];
 
         // Initialize array with individual telegramUserId if it exists
-        if (userSettings.telegramUserId) {
+        if (userSettings.telegramUserId && userSettings.sendTo === true) {
           telegramUserIds.push(userSettings.telegramUserId);
         }
 

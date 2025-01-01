@@ -124,7 +124,7 @@ export async function processCron(req, res) {
             const userSettings = await getUserNotificationSettings(userId);
             const notificationLevels = userSettings?.notificationLevels || [];
             let telegramUserIds = [];
-            if (userSettings.telegramUserId) {
+            if (userSettings.telegramUserId && userSettings.sendTo === true) {
               telegramUserIds.push(userSettings.telegramUserId);
             }
 
