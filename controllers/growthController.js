@@ -193,6 +193,8 @@ export async function processGrowth(req, res) {
                 notificationLevels.includes(tweet.relevancy.toLowerCase()) &&
                 telegramUserIds
               ) {
+                
+                const message = `${tweet.relevancy} relevancy tweet: ${tweet.url}`;
                 if (telegramUserIds.length > 0) {
                   const sendPromises = telegramUserIds.map((userId) =>
                     sendTelegramMessage(userId, message)

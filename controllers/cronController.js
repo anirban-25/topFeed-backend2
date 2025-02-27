@@ -133,7 +133,7 @@ export async function processCron(req, res) {
               const groupIds = userSettings.groups.map((group) => group.id);
               telegramUserIds = [...telegramUserIds, ...groupIds];
             }
-            
+
             if (!tweetFeedData.twitterUrls || !tweetFeedData.tags) {
               console.log(`Missing twitterUrls or tags for user ${userId}`);
               return null;
@@ -188,6 +188,7 @@ export async function processCron(req, res) {
                 telegramUserIds
               ) {
                 try {
+                  const message = `${tweet.relevancy} relevancy tweet: ${tweet.url}`;
                   if (telegramUserIds.length > 0) {
                     const sendPromises = telegramUserIds.map((userId) =>
                       sendTelegramMessage(userId, message)

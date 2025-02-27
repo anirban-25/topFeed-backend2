@@ -110,7 +110,7 @@ async function fetchRssFeeds(urls, topic, userId) {
           const str= String(item.title);
           const firstColonIndex = str.indexOf(":");
           const extractedText = str.substring(firstColonIndex + 2); // +2 to skip the ': ' part
-          console.log(extractedText, "\n`");
+          // console.log(extractedText, "\n`");
           twitterData.push({
             title: item.title,
             link: item.link,
@@ -158,7 +158,7 @@ async function fetchRssFeeds(urls, topic, userId) {
       text: excludeLinks(item.content_text),
     }));
 
-  console.log(filteredData);
+  // console.log(filteredData);
 
   // store last_date later
   try {

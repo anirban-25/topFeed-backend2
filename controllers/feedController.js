@@ -141,6 +141,7 @@ Remember: For personality-based topics like "Trump" or "Biden", ANY direct refer
 
           // Send to all recipients if there are any
           if (telegramUserIds.length > 0) {
+            console.log("send notification for users: " + telegramUserIds.join(", "));
             const sendPromises = telegramUserIds.map((userId) =>
               sendTelegramMessage(userId, message)
             );
@@ -324,12 +325,12 @@ export default async function feedController(req, res) {
         if (userSettings.telegramUserId && userSettings.sendTo === true) {
           telegramUserIds.push(userSettings.telegramUserId);
         }
-
         // Add group IDs if they exist
         if (userSettings.groups && Array.isArray(userSettings.groups)) {
           const groupIds = userSettings.groups.map((group) => group.id);
           telegramUserIds = [...telegramUserIds, ...groupIds];
         }
+        console.log("telegramUserIds" + telegramUserIds);
       }
     } catch (error) {
       console.error("Error fetching user settings:", error);

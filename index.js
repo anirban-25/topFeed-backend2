@@ -3,6 +3,7 @@ import cors from "cors";
 import bodyParser from "body-parser";
 import feedRoutes from "./routes/feedRoute.js";
 import redditRoutes from "./routes/redditRoutes.js";
+import newRedditRoutes from "./routes/newRedditRoutes.js";
 import monthlyScheduler from "./routes/monthlyScheduler.js";
 // import { initializeFirebase } from './config/firebase.js';
 import cronRoute from "./routes/cronRoute.js";
@@ -11,7 +12,7 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5000;
 // Increase the timeout for all routes
 
 app.use((req, res, next) => {
@@ -34,6 +35,7 @@ app.use("/api", cronRoute);
 app.use("/api/feed", feedRoutes);
 
 app.use("/api/reddit", redditRoutes);
+app.use("/api/reddit/search", newRedditRoutes);
 
 app.use("/cron", monthlyScheduler);
 

@@ -1,5 +1,5 @@
 {
-    "name": "topfeed-backend",
+    "name": "stonkvibes-backend",
     "version": "1.0.0",
     "description": "A backend service for fetching and processing Twitter and RSS feeds, and storing data in Firestore.",
     "main": "index.js",

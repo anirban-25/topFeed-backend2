@@ -153,7 +153,7 @@ export async function processStarter(req, res) {
             const result = await fetchFeeds(
               tweetFeedData.twitterUrls,
               topicsString,
-              userId,
+              userId
             );
             console.log(`User ${userId} - fetchFeeds result:`, result);
 
@@ -195,6 +195,7 @@ export async function processStarter(req, res) {
                 notificationLevels.includes(tweet.relevancy.toLowerCase()) &&
                 telegramUserIds
               ) {
+                const message = `${tweet.relevancy} relevancy tweet: ${tweet.url}`;
                 if (telegramUserIds.length > 0) {
                   const sendPromises = telegramUserIds.map((userId) =>
                     sendTelegramMessage(userId, message)
